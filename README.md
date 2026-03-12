@@ -134,7 +134,9 @@ A especificação OpenAPI da API está disponível no arquivo `OpenAPI.yaml` na 
 Ela pode ser importada em ferramentas como Postman, Insomnia, etc
 para geração de clientes ou visualização interativa.
 
-TODO: Implementação de Swagger UI para melhor visualização e implementação do CRUD completo com POST, GET, PUT e DELETE de comentários e posts do blog.
+TODO: Implementação de Swagger UI para melhor visualização e CRUD completo com POST, GET, PUT e DELETE dos posts e comentários do blog.
+
+
 ---
 
 ## API Blog Comments (English)
