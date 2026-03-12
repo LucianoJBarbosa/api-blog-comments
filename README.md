@@ -60,7 +60,7 @@ Nota: As credenciais e a chave JWT estão expostas para fins de demonstração d
 Para obter um token:
 
 ```bash
-curl -X POST https://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin123"}'
 ```
@@ -92,7 +92,7 @@ cd api-blog-comments-dev
 dotnet run
 ```
 
-Por padrão, a aplicação sobe em uma porta HTTPS configurada pelo ASP.NET (por exemplo `https://localhost:5001`).
+Por padrão, a aplicação sobe em uma porta HTTPS configurada pelo ASP.NET (por exemplo `http://localhost:5000`).
 
 ### Execução em container Docker
 
@@ -204,7 +204,7 @@ Note: The credentials and JWT key are exposed to better demonstrate the use case
 To obtain a token:
 
 ```bash
-curl -X POST https://localhost:5001/api/auth/login \
+curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "admin", "password": "admin123"}'
 ```
@@ -237,7 +237,7 @@ cd api-blog-comments-dev
 dotnet run
 ```
 
-By default the application runs on an HTTPS port provided by ASP.NET (for example `https://localhost:5001`).
+By default the application runs on an HTTPS port provided by ASP.NET (for example `http://localhost:5000`).
 
 ### Running in a Docker container
 
