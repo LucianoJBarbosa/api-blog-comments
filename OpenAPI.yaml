@@ -1,0 +1,177 @@
+openapi: 3.0.3
+info:
+  title: Blog Comments API
+  version: "1.0"
+  description: API for managing blog posts and comments.
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+paths:
+  /api/posts:
+    get:
+      summary: Get all blog posts (summary)
+      responses:
+        '200':
+          description: List of post summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlogPostSummary'
+    post:
+      summary: Create a new blog post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBlogPost'
+      responses:
+        '201':
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogPost'
+        '400':
+          description: Validation error
+  /api/posts/{id}:
+    get:
+      summary: Get a post by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Post with comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlogPost'
+        '404':
+          description: Not found
+  /api/posts/{id}/comments:
+    post:
+      summary: Add a comment to a post
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComment'
+      responses:
+        '201':
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Validation error
+        '404':
+          description: Post not found
+  /api/auth/login:
+    post:
+      summary: Authenticate and obtain a JWT token
+      description: >
+        Authenticates a user using username and password and returns a JWT token.
+        Default demo credentials:
+        **username:** `admin`, **password:** `admin123`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              username: admin
+              password: admin123
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Invalid credentials
+components:
+  schemas:
+    BlogPost:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    BlogPostSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        commentCount:
+          type: integer
+    CreateBlogPost:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        content:
+          type: string
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+    CreateComment:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          maxLength: 500
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: admin
+        password:
+          type: string
+          example: admin123
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT bearer token to be used in the Authorization header

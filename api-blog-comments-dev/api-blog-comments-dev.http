@@ -1,0 +1,6 @@
+@api_blog_comments_dev_HostAddress = http://localhost:5000
+
+GET {{api_blog_comments_dev_HostAddress}}/posts/
+Accept: application/json
+
+###
