@@ -55,7 +55,7 @@ No ambiente atual de desenvolvimento, existe um usuário fixo de exemplo:
 - **Usuário:** `admin`
 - **Senha:** `admin123`
 
-Nota: As credenciais e a chave JWT estão expostas para fins de demonstração da demo. Em produção, seriam utilizados User Secrets ou Azure Key Vault.
+Nota: As credenciais e a chave JWT estão expostas para fins de demonstração. Em produção, seriam utilizados User Secrets ou Azure Key Vault.
 
 Para obter um token:
 
