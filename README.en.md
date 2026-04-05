@@ -4,7 +4,7 @@ Versao em portugues: [README.md](README.md)
 
 HTTP API in ASP.NET Core for blog posts, comments, and JWT-based authentication.
 The project is intentionally small, but built around explicit architectural decisions: real persistence, ownership-based authorization, runtime OpenAPI documentation, and integration tests.
-Basic API boilerplate for a minimal business model.
+API boilerplate for a basic business model.
 
 ### Status
 
