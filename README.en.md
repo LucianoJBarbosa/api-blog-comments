@@ -7,9 +7,7 @@ The project is intentionally small, but built around explicit architectural deci
 
 ### Status
 
-The project is already ready as a technical boilerplate for small and medium APIs that need authentication, simple authorization, relational persistence, versioned migrations, minimal observability, and executable documentation.
-
-It is not structurally incomplete. What remains from this point on are evolutions for scale, distributed operation, and additional production hardening.
+The project is ready as a technical boilerplate for small and medium APIs that need authentication, simple authorization, relational persistence, versioned migrations, minimal observability, and executable documentation.
 
 ### Quick read
 
