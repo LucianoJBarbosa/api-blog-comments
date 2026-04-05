@@ -4,6 +4,7 @@ Versao em ingles: [README.en.md](README.en.md)
 
 API HTTP em ASP.NET Core para posts, comentários e autenticação baseada em JWT.
 O projeto foi mantido pequeno de propósito, mas com decisões de arquitetura explícitas: persistência real, autorização por ownership, documentação OpenAPI em runtime e testes de integração.
+Boilerplate para APIs em .NET com modelo de negócios básico.
 
 ### Status
 
