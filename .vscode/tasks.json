@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "migration-status",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/migration-status.sh"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "reset-local-db",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/reset-local-db.sh"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "seed-demo-db",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/seed-demo-db.sh"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "rebuild-demo-db",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "scripts/rebuild-demo-db.sh"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

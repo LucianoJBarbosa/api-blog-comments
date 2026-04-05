@@ -16,10 +16,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# allow container to run on both Linux and Windows
-# force ASP.NET to listen on port 80 inside the container
-ENV ASPNETCORE_URLS=http://+:80
-EXPOSE 80
-EXPOSE 443
+# bind to a non-privileged port for production-oriented containers
+ENV ASPNETCORE_HTTP_PORTS=8080
+EXPOSE 8080
 
 ENTRYPOINT ["dotnet", "api-blog-comments-dev.dll"]

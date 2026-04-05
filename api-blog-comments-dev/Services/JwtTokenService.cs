@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Globalization;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Options;
@@ -9,7 +10,7 @@ namespace api_blog_comments_dev.Services
 {
     public interface IJwtTokenService
     {
-        string GenerateToken(string username);
+        string GenerateToken(int userId, string username, string role);
     }
 
     public class JwtTokenService : IJwtTokenService
@@ -21,13 +22,16 @@ namespace api_blog_comments_dev.Services
             _settings = settings.Value;
         }
 
-        public string GenerateToken(string username)
+        public string GenerateToken(int userId, string username, string role)
         {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, username),
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString(CultureInfo.InvariantCulture)),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Name, username)
+                new Claim(JwtRegisteredClaimNames.UniqueName, username),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString(CultureInfo.InvariantCulture)),
+                new Claim(ClaimTypes.Name, username),
+                new Claim(ClaimTypes.Role, role),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Key));

@@ -28,7 +28,7 @@ public class JwtTokenServiceTests
         var service = new JwtTokenService(options);
 
         // Act
-        var tokenString = service.GenerateToken("test-user");
+        var tokenString = service.GenerateToken(42, "test-user", UserRoles.Author);
 
         // Assert
         tokenString.Should().NotBeNullOrWhiteSpace();
@@ -38,7 +38,9 @@ public class JwtTokenServiceTests
 
         token.Issuer.Should().Be(settings.Issuer);
         token.Audiences.Should().Contain(settings.Audience);
+        token.Claims.Should().Contain(c => c.Type == ClaimTypes.NameIdentifier && c.Value == "42");
         token.Claims.Should().Contain(c => c.Type == ClaimTypes.Name && c.Value == "test-user");
+        token.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == UserRoles.Author);
     }
 }
 

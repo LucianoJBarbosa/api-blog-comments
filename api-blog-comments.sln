@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-blog-comments-dev", "ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-blog-comments-dev.Tests", "api-blog-comments-dev.Tests\api-blog-comments-dev.Tests.csproj", "{A7B4C2F0-2B60-4C7D-86A5-8B7F1F62E6D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "api-blog-comments-dev.Tools", "tools\api-blog-comments-dev.Tools\api-blog-comments-dev.Tools.csproj", "{F8435C58-6AE5-4A06-9190-DB5EA9EEAC8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{A7B4C2F0-2B60-4C7D-86A5-8B7F1F62E6D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7B4C2F0-2B60-4C7D-86A5-8B7F1F62E6D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7B4C2F0-2B60-4C7D-86A5-8B7F1F62E6D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8435C58-6AE5-4A06-9190-DB5EA9EEAC8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8435C58-6AE5-4A06-9190-DB5EA9EEAC8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8435C58-6AE5-4A06-9190-DB5EA9EEAC8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8435C58-6AE5-4A06-9190-DB5EA9EEAC8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

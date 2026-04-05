@@ -1,4 +1,3 @@
-version: '3.4'
 services:
   blogapi:
     image: api-blog-comments:latest
@@ -6,6 +5,15 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:80"
+      - "${HOST_PORT:-5000}:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Jwt__Key=${JWT_KEY:-}
+      - DataProtection__KeysPath=/var/app/data-protection-keys
+      - HttpPipeline__UseHttpsRedirection=false
+      - HttpPipeline__UseForwardedHeaders=true
+    volumes:
+      - data-protection-keys:/var/app/data-protection-keys
+
+volumes:
+  data-protection-keys:

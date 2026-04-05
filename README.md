@@ -1,282 +1,212 @@
 ## API Blog Comments
 
-Uma API em ASP.NET Core para gerenciar posts de blog e seus comentários.
-O foco é demonstrar boas práticas de validação com **DataAnnotations**, uso de DTOs,
-documentação com OpenAPI e preparação para um cenário futuro com banco de dados real.
+Versao em ingles: [README.en.md](README.en.md)
 
-### Tecnologias
+API HTTP em ASP.NET Core para posts, comentários e autenticação baseada em JWT.
+O projeto foi mantido pequeno de propósito, mas com decisões de arquitetura explícitas: persistência real, autorização por ownership, documentação OpenAPI em runtime e testes de integração.
 
-- ASP.NET Core Web API (`net10.0`)
-- Entity Framework Core (banco em memória neste projeto)
-- OpenAPI (arquivo de especificação `OpenAPI.yaml`)
-- Autenticação e autorização com JWT
+### Status
 
-### Endpoints principais
+O projeto já está pronto como boilerplate técnico para APIs pequenas e médias com autenticação, autorização simples, persistência relacional, migrações versionadas, observabilidade mínima e documentação executável.
 
-- `GET /api/posts` – lista posts com quantidade de comentários.
-- `POST /api/posts` – cria um novo post (requere autenticação).
-- `GET /api/posts/{id}` – retorna um post específico com seus comentários.
-- `POST /api/posts/{id}/comments` – adiciona um comentário a um post (requere autenticação).
-- `POST /api/auth/login` – autentica um usuário e retorna um token JWT.
+Ele não está "incompleto" no sentido estrutural. O que resta a partir daqui são evoluções para cenários de escala, operação distribuída e endurecimento adicional de produção.
 
-### Validação e DataAnnotations
+### Leitura rápida
 
-As entidades e DTOs utilizam **DataAnnotations** para validar os dados de entrada e modelar as regras de domínio:
+Se a intenção é avaliar o repositório rapidamente, os pontos centrais são estes:
 
-- `BlogPost` e `Comment` possuem atributos como `[Required]` e `[StringLength]` para garantir títulos, conteúdos e textos de comentários válidos.
-- Os DTOs (`CreateBlogPostDto`, `CreateCommentDto`) também usam DataAnnotations, fazendo com que requisições inválidas retornem automaticamente `400 Bad Request` com detalhes dos erros.
+- persistência real com Dapper e SQL explícito
+- autenticação com JWT e hashing com Argon2id
+- autorização por papel e ownership
+- migrações versionadas com histórico
+- observabilidade minima com `ProblemDetails`, id de correlacao e health checks
+- documentação runtime com OpenAPI e Scalar
+- testes de integração cobrindo a superfície HTTP
 
-Isso garante que, mesmo usando um banco em memória, a modelagem e a validação estejam prontas para serem reaproveitadas quando for configurado um provedor de dados real.
+### Escopo
 
-### Persistência e preparo para banco real
+- CRUD de posts e comentários
+- autenticação com JWT
+- papéis `Author` e `Admin`
+- autorização por autoria do recurso
+- contrato OpenAPI estático e runtime
 
-Atualmente a API utiliza um **banco em memória** configurado no `Program.cs`, adequado para cenários de desenvolvimento e demonstração.
+### Decisões arquiteturais
 
-Quando você quiser evoluir para um banco persistente (por exemplo **Azure SQL** ou **SQL Server**), o fluxo típico será:
+O histórico formal dessas decisões está em [docs/adr/README.md](docs/adr/README.md).
 
-1. Adicionar o pacote do provedor EF Core correspondente (`Microsoft.EntityFrameworkCore.SqlServer`, por exemplo).
-2. Alterar a configuração do `DbContext` para usar a connection string adequada.
-3. Criar e aplicar migrations com `dotnet ef migrations add` / `dotnet ef database update`.
-4. Ajustar a connection string via `appsettings.json` ou variáveis de ambiente (ideal para Azure).
+| Decisão | Justificativa | Trade-off |
+| --- | --- | --- |
+| ASP.NET Core com minimal hosting | Bootstrap direto e leitura simples da composição da API | `Program.cs` concentra mais responsabilidades |
+| Dapper no acesso a dados | SQL explícito, previsível e fácil de inspecionar | Menos automação do que um ORM completo |
+| `IDbConnectionFactory` com provider configurável | Reduz acoplamento entre aplicação e banco atual | Diferenças entre providers continuam tratadas manualmente |
+| SQLite como padrão local | Execução simples com persistência real | Não cobre sozinho cenários mais exigentes de produção |
+| Migrações versionadas com histórico | Evolução explícita de schema sem depender de bootstrap opaco | Rollback e pipeline externo de migração ainda não fazem parte da base |
+| Argon2id para senha | Endurecimento real da autenticação | Maior custo computacional no login e cadastro |
+| JWT com claims de identidade e policies nomeadas | Autenticação stateless com autorização explícita no bootstrap da aplicação | Revogação fina de token fica fora do escopo |
+| Ownership em posts e comentários | Controle de acesso no domínio, não só no endpoint | Regras e queries ficam mais detalhadas |
+| OpenAPI runtime com Scalar | Contrato navegável e alinhado ao runtime | Superfície de documentação precisa ser tratada por ambiente |
+| Testes de integração com `WebApplicationFactory` | Validação próxima do comportamento real da API | Suíte mais pesada do que testes puramente unitários |
 
-O desenho das entidades, relacionamentos e DataAnnotations já está pronto para essa migração futura.
+### Estrutura lógica
 
-### Autenticação e autorização (JWT)
+```mermaid
+flowchart LR
+    Client[Cliente HTTP]
+    Controllers[Controllers]
+    Services[Services]
+    Repositories[Repositories]
+    Infra[Infraestrutura]
+    Database[(Banco)]
 
-A API expõe um fluxo simples de autenticação baseado em **JWT (JSON Web Token)**:
+    Client --> Controllers
+    Controllers --> Services
+    Controllers --> Repositories
+    Services --> Repositories
+    Repositories --> Infra
+    Infra --> Database
+```
 
-- `POST /api/auth/login` recebe um `username` e `password` e, quando válidos, retorna um token JWT.
-- O token deve ser enviado nas chamadas autenticadas usando o header `Authorization: Bearer {token}`.
-- Endpoints de leitura (`GET /api/posts`, `GET /api/posts/{id}`) são públicos.
-- Endpoints de escrita (`POST /api/posts`, `POST /api/posts/{id}/comments`) exigem um token JWT válido.
+### Regras de domínio e segurança
 
-No ambiente atual de desenvolvimento, existe um usuário fixo de exemplo:
+- usuários cadastrados recebem o papel `Author`
+- usuários `Admin` podem editar e remover qualquer recurso
+- usuários `Author` só podem alterar recursos de própria autoria
+- não existe seed automático de usuário administrativo
+- a chave JWT deve ser fornecida externamente em runtime
+- as rotas de autenticação possuem rate limiting
+- o schema é controlado por migrações registradas em `__SchemaMigrations`
 
-- **Usuário:** `admin`
-- **Senha:** `admin123`
+### Contrato e documentação
 
-Nota: As credenciais e a chave JWT estão expostas para fins de demonstração. Em produção, seriam utilizados User Secrets ou Azure Key Vault.
+- especificação estática em [OpenAPI.yaml](OpenAPI.yaml)
+- documentação central em [docs/index.md](docs/index.md)
+- versão em inglês da documentação central em [docs/index.en.md](docs/index.en.md)
+- ADRs em [docs/adr/README.md](docs/adr/README.md)
+- case técnico em [docs/case-tecnico.md](docs/case-tecnico.md)
+- backlog técnico em [docs/backlog-tecnico-api.md](docs/backlog-tecnico-api.md)
+- documento runtime em `/docs/openapi/v1.json` quando habilitado
+- interface interativa em `/docs` quando habilitada
 
-Para obter um token:
+### Operações locais
+
+Para facilitar demo e manutenção local sem recolocar seed automático no runtime, o repositório expõe comandos explícitos:
 
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin123"}'
+bash scripts/migration-status.sh
+bash scripts/reset-local-db.sh
+bash scripts/rebuild-demo-db.sh
+bash scripts/seed-demo-db.sh
 ```
 
-Depois, utilize o valor do campo `token` retornado no header:
+O comando de status mostra o estado local das migrações conhecidas sem aplicar nada por trás.
+O reset recria o banco SQLite local com o schema atual. O seed popula o banco local com dados de demonstração e os usuários abaixo:
 
-```http
-Authorization: Bearer {token}
-```
+- `demo-admin / DemoAdmin123!`
+- `demo-author / DemoAuthor123!`
+- `demo-author-2 / DemoAuthorTwo123!`
 
-As configurações de emissão e validação do token (Issuer, Audience, Key, ExpirationMinutes) ficam em `appsettings*.json` na seção `Jwt`.
-Em um ambiente real, a chave (`Key`) deve ser protegida por mecanismos seguros (variáveis de ambiente, Azure Key Vault, etc.).
+O comando `rebuild-demo-db` executa reset seguido de seed e é a opção mais prática para revisar a demo rapidamente.
 
-### CORS
-
-A API já está configurada com **CORS** para permitir o consumo a partir de um front-end (exemplo: SPA em `localhost:4200`).
-Os domínios permitidos podem ser facilmente ajustados no `Program.cs` conforme o ambiente e o cliente que irá consumir a API.
+Esses comandos são voltados para ambiente local com SQLite e não rodam automaticamente no startup da API.
 
 ### Execução local
 
-Pré-requisitos:
+Antes de subir a API fora do container, configure uma chave JWT válida. A aplicação falha no startup se `Jwt:Key` estiver vazia, com placeholder ou com menos de 32 caracteres.
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-
-Comandos:
+Uma opção prática para desenvolvimento local é usar user-secrets:
 
 ```bash
-cd api-blog-comments-dev
-dotnet run
+dotnet user-secrets set "Jwt:Key" "dev-local-jwt-secret-key-with-32chars-minimum" --project api-blog-comments-dev/api-blog-comments-dev.csproj
+dotnet run --project api-blog-comments-dev/api-blog-comments-dev.csproj
 ```
 
-Por padrão, a aplicação sobe em uma porta HTTPS configurada pelo ASP.NET (por exemplo `http://localhost:5000`).
-
-### Execução em container Docker
-
-O repositório inclui um `Dockerfile` com build multi-stage (SDK + runtime ASP.NET).
-Para construir e executar a API em um container:
+Se preferir, a chave também pode ser fornecida por variável de ambiente:
 
 ```bash
-# na raiz do projeto
-docker build -t api-blog-comments:latest .
-
-docker run -d \
-  -p 5000:80 \
-  -e ASPNETCORE_ENVIRONMENT=Development \
-  --name api-blog-comments \
-  api-blog-comments:latest
+Jwt__Key="dev-local-jwt-secret-key-with-32chars-minimum" dotnet run --project api-blog-comments-dev/api-blog-comments-dev.csproj
 ```
 
-Após subir o container:
+### Docker
 
-- API: `http://localhost:5000/api/posts`
-- Login (JWT): `http://localhost:5000/api/auth/login`
-
-### Testes automatizados
-
-O projeto inclui testes automatizados com **xUnit**:
-
-- Projeto de testes: `api-blog-comments-dev.Tests`
-- Exemplos de testes cobrindo geração de token JWT e comportamento básico do `PostsController`.
-
-Para executar os testes:
+Para validar a API em container com a configuracao de producao simplificada:
 
 ```bash
-dotnet test
+JWT_KEY="sua-chave-jwt-com-pelo-menos-32-caracteres" docker compose up --build
 ```
 
-### Documentação (OpenAPI)
-
-A especificação OpenAPI da API está disponível no arquivo `OpenAPI.yaml` na raiz do projeto.
-Ela pode ser importada em ferramentas como Postman, Insomnia, etc
-para geração de clientes ou visualização interativa.
-
-TODO: Implementação de Swagger UI para melhor visualização e CRUD completo com POST, GET, PUT e DELETE dos posts e comentários do blog.
-
-
----
-
-## API Blog Comments (English)
-
-An ASP.NET Core Web API for managing blog posts and their comments.
-The focus is to showcase good practices with **DataAnnotations**, DTOs,
-OpenAPI documentation and a codebase that is ready to be upgraded
-to a real database provider in the future.
-
-### Stack
-
-- ASP.NET Core Web API (`net10.0`)
-- Entity Framework Core (in‑memory database in this project)
-- OpenAPI (spec file `OpenAPI.yaml`)
-- Authentication and authorization with JWT
-
-### Main endpoints
-
-- `GET /api/posts` – list posts with the number of comments.
-- `POST /api/posts` – create a new post (**requires authentication**).
-- `GET /api/posts/{id}` – get a specific post with its comments.
-- `POST /api/posts/{id}/comments` – add a comment to a post (**requires authentication**).
-- `POST /api/auth/login` – authenticate a user and return a JWT token.
-
-### Validation and DataAnnotations
-
-Entities and DTOs use **DataAnnotations** to validate input and encode business rules:
-
-- `BlogPost` and `Comment` use attributes like `[Required]` and `[StringLength]` to guarantee valid titles, content and comment text.
-- DTOs (`CreateBlogPostDto`, `CreateCommentDto`) also use DataAnnotations, so invalid requests automatically return `400 Bad Request` with detailed errors.
-
-This means that, even with an in‑memory database, the domain model and validation are ready
-to be reused when switching to a real data provider.
-
-### Persistence and readiness for a real database
-
-Currently the API uses an **in‑memory database** configured in `Program.cs`, which is fine for demos and development.
-
-To move to a persistent database (for example **Azure SQL** or **SQL Server**), a typical flow would be:
-
-1. Add the corresponding EF Core provider package (e.g. `Microsoft.EntityFrameworkCore.SqlServer`).
-2. Change the `DbContext` configuration to use an appropriate connection string.
-3. Create and apply migrations with `dotnet ef migrations add` / `dotnet ef database update`.
-4. Manage the connection string via `appsettings.json` or environment variables (ideal for Azure).
-
-The current entities, relationships and DataAnnotations were designed with this migration in mind.
-
-### Authentication and authorization (JWT)
-
-The API exposes a simple **JWT (JSON Web Token)** authentication flow:
-
-- `POST /api/auth/login` accepts `username` and `password` and, when valid, returns a JWT token.
-- The token must be sent on authenticated requests using the `Authorization: Bearer {token}` header.
-- Read endpoints (`GET /api/posts`, `GET /api/posts/{id}`) are public.
-- Write endpoints (`POST /api/posts`, `POST /api/posts/{id}/comments`) require a valid JWT token.
-
-In the current development setup there is a fixed sample user:
-
-- **Username:** `admin`
-- **Password:** `admin123`
-
-
-Note: The credentials and JWT key are exposed to better demonstrate the use case of authorization and authentication. In production, it's better to use User Secrets or Azure Key Vault. 
-
-To obtain a token:
+Se a porta `5000` estiver ocupada no host, publique em outra porta:
 
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+HOST_PORT=5080 JWT_KEY="sua-chave-jwt-com-pelo-menos-32-caracteres" docker compose up --build
+```
+
+O compose agora persiste chaves de DataProtection em volume dedicado e desabilita o redirecionamento HTTPS dentro do container local, evitando avisos desnecessarios no cenário sem terminacao TLS interna.
+
+### O que ainda não faz parte da base
+
+- SQL Server como runtime operacional principal
+- ownership checks fundidos diretamente nas operações SQL de escrita
+- redução do payload do detalhe do post para não carregar todos os comentários
+- métricas e tracing além da observabilidade mínima atual
+- estratégia de sessão com refresh token ou revogação de JWT
+
+### Como ler este projeto
+
+- como boilerplate: uma base enxuta, mas já operacionalmente séria
+- como portfólio: um repositório que deixa decisões e trade-offs explícitos
+- como referência: um exemplo de API pequena sem esconder persistência, autenticação ou autorização atrás de abstrações decorativas
+
+### Tutorial rápido de uso
+
+1. Crie um usuário.
+
+```bash
+curl -X POST http://localhost:5245/api/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin123"}'
+  -d '{"username": "luciano", "password": "senha-segura-123"}'
 ```
 
-Then use the `token` value in:
+2. Guarde o token retornado e use em `Authorization: Bearer {token}`.
 
-```http
-Authorization: Bearer {token}
-```
-
-Token emission and validation settings (Issuer, Audience, Key, ExpirationMinutes) live in
-`appsettings*.json` under the `Jwt` section. In a real environment the secret key must be
-stored securely (environment variables, Azure Key Vault, etc.).
-
-### CORS
-
-The API is configured with **CORS** so a front‑end app (for example a SPA on `localhost:4200`)
-can consume it. Allowed origins can be adjusted in `Program.cs` depending on the client and environment.
-
-### Running locally
-
-Prerequisites:
-
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
-
-Commands:
+3. Crie um post.
 
 ```bash
-cd api-blog-comments-dev
-dotnet run
+curl -X POST http://localhost:5245/api/posts \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {token}" \
+  -d '{"title": "Primeiro post", "content": "Conteudo do post"}'
 ```
 
-By default the application runs on an HTTPS port provided by ASP.NET (for example `http://localhost:5000`).
-
-### Running in a Docker container
-
-The repository includes a multi-stage `Dockerfile` (SDK + ASP.NET runtime).
-To build and run the API inside a container:
+4. Consulte o post.
 
 ```bash
-# from the project root
-docker build -t api-blog-comments:latest .
-
-docker run -d \
-  -p 5000:80 \
-  -e ASPNETCORE_ENVIRONMENT=Development \
-  --name api-blog-comments \
-  api-blog-comments:latest
+curl http://localhost:5245/api/posts/1
 ```
 
-Once the container is running:
-
-- API: `http://localhost:5000/api/posts`
-- Login (JWT): `http://localhost:5000/api/auth/login`
-
-### Automated tests
-
-The solution includes automated tests using **xUnit**:
-
-- Test project: `api-blog-comments-dev.Tests`
-- Sample tests covering JWT token generation and basic `PostsController` behavior.
-
-To run the tests:
+5. Adicione um comentário.
 
 ```bash
-dotnet test
+curl -X POST http://localhost:5245/api/posts/1/comments \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {token}" \
+  -d '{"text": "Primeiro comentario"}'
 ```
 
-### Documentation (OpenAPI)
+### Superfície principal da API
 
-The OpenAPI specification for this API is available as `OpenAPI.yaml` at
-the project root. You can import this file into tools such as Postman,
-Insomnia, etc
-
-TODO: Implementation of Swagger UI for better visualization and complete CRUD with POST, GET, PUT and DELETE of the blog posts and comments...
+| Método | Rota | Autenticação | Finalidade |
+| --- | --- | --- | --- |
+| GET | `/api/posts` | Não | Listar posts de forma paginada |
+| GET | `/api/posts/{id}` | Não | Consultar post com comentários |
+| POST | `/api/posts` | Sim | Criar post |
+| PUT | `/api/posts/{id}` | Sim | Atualizar post |
+| DELETE | `/api/posts/{id}` | Sim | Remover post |
+| GET | `/api/posts/{id}/comments` | Não | Listar comentários de um post de forma paginada |
+| GET | `/api/posts/{id}/comments/{commentId}` | Não | Consultar comentário |
+| POST | `/api/posts/{id}/comments` | Sim | Criar comentário |
+| PUT | `/api/posts/{id}/comments/{commentId}` | Sim | Atualizar comentário |
+| DELETE | `/api/posts/{id}/comments/{commentId}` | Sim | Remover comentário |
+| POST | `/api/auth/register` | Não | Cadastrar usuário |
+| POST | `/api/auth/login` | Não | Autenticar usuário |
+| GET | `/api/auth/me` | Sim | Consultar usuário autenticado |
