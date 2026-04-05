@@ -7,7 +7,7 @@ O projeto foi mantido pequeno de propósito, mas com decisões de arquitetura ex
 
 ### Status
 
-O projeto já está pronto como boilerplate técnico para APIs pequenas e médias com autenticação, autorização simples, persistência relacional, migrações versionadas, observabilidade mínima e documentação executável.
+O projeto está pronto como boilerplate técnico para APIs pequenas e médias com autenticação, autorização simples, persistência relacional, migrações versionadas, observabilidade mínima e documentação executável.
 
 
 ### Leitura rápida
