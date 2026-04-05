@@ -9,7 +9,6 @@ O projeto foi mantido pequeno de propósito, mas com decisões de arquitetura ex
 
 O projeto já está pronto como boilerplate técnico para APIs pequenas e médias com autenticação, autorização simples, persistência relacional, migrações versionadas, observabilidade mínima e documentação executável.
 
-Ele não está "incompleto" no sentido estrutural. O que resta a partir daqui são evoluções para cenários de escala, operação distribuída e endurecimento adicional de produção.
 
 ### Leitura rápida
 
